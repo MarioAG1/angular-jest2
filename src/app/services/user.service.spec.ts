@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 import { UserService } from './user.service';
+import { of } from 'rxjs';
 
 const usersListMock = [
   {
@@ -245,24 +246,43 @@ describe('UserService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        HttpClientModule
-      ],
+      // imports: [
+      //   HttpClientModule
+      // ],
       providers: [
         UserService,
         {
-          provide: HttpClient, useValue: {httpClientMok}
+          provide: HttpClient, useValue: httpClientMok
         }
       ]
     });
-
     service = TestBed.inject(UserService);
-    httpClientMok.get.mockReturnValue(usersListMock)
+    httpClientMok.get.mockReturnValue(of(usersListMock))
   });
 
-  test('should be created', () => {
-    const cadena = "hola"
-    expect(cadena).toBe("hola")
-  });
+  test('getUser http have been called', () => {
+    service.getUsers()
+    expect(httpClientMok.get).toHaveBeenCalled()
+  })
 
+  test('getUser return userList', (done) => {
+    // Añadir of para arreglarlo arriba
+    // Da error asi solo por que no puedes hacer un subccribe de un array , pero si de un Observable
+    service.getUsers().subscribe(res => {
+      expect(res.length).toBe(10)
+      done()
+    })
+  })
+
+  test('getCoustomerUser return getLocation', (done) => {
+    httpClientMok.get.mockReturnValue(of(usersListMock[0]))
+    const expectedRes = {
+        lat: '-37.3159',
+        lng: '81.1496',
+    }
+    service.getCustomUser().subscribe(res => {
+      expect(res).toEqual(expectedRes)
+      done()
+    })
+  })
 });
